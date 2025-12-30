@@ -1,8 +1,25 @@
 import { useAuth } from '../context/AuthContext';
-import { Sword, LogOut, Flame } from 'lucide-react';
+import { Sword, LogOut, Flame, Sun, Moon } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 const Header = () => {
   const { user, logout } = useAuth();
+  const [isDark, setIsDark] = useState(true);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      setIsDark(savedTheme === 'dark');
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = isDark ? 'light' : 'dark';
+    setIsDark(!isDark);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
 
   return (
     <header className="header">
@@ -33,6 +50,14 @@ const Header = () => {
           <div className="user-points">
             ⚡ {user?.totalPoints?.toLocaleString() || 0}
           </div>
+
+          <button 
+            className="btn btn-ghost btn-icon" 
+            onClick={toggleTheme}
+            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
 
           <button className="btn btn-ghost btn-icon" onClick={logout} title="Logout">
             <LogOut size={18} />

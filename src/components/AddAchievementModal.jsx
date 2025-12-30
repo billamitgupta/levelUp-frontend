@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 
 const ICONS = ['🏆', '🎁', '🕶️', '🚁', '💻', '🏍️', '🚗', '✈️', '🏠', '⌚', '📱', '🎮', '👟', '👜', '💎', '🎸'];
 
@@ -100,9 +100,11 @@ const AddAchievementModal = ({ onClose, onSubmit }) => {
 
           <div className="modal-footer">
             <button type="button" className="btn btn-ghost" onClick={onClose}>
+              <X size={16} />
               Cancel
             </button>
             <button type="submit" className="btn btn-primary">
+              <Plus size={16} />
               Create Reward
             </button>
           </div>

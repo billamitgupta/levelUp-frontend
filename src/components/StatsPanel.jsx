@@ -1,122 +1,159 @@
-import { Zap, TrendingUp, Trophy, Target, Flame } from 'lucide-react';
+import { Zap, TrendingUp, Trophy, Target, Flame, Star, Award, Calendar, Clock } from 'lucide-react';
 
 const StatsPanel = ({ stats, user }) => {
   if (!stats) return null;
 
   const levelProgress = getLevelProgress(stats.lifetimePoints);
+  const streakBonus = Math.floor(stats.dayStreak / 7) * 50; // Bonus every 7 days
 
   return (
-    <div className="card card-glow">
-      {/* Day Streak Banner */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '0.5rem',
-        padding: '0.75rem',
-        marginBottom: '1rem',
-        background: stats.dayStreak > 0
-          ? 'linear-gradient(135deg, rgba(255,102,0,0.2) 0%, rgba(255,0,64,0.1) 100%)'
-          : 'rgba(255,255,255,0.05)',
-        borderRadius: '8px',
-        border: stats.dayStreak > 0
-          ? '1px solid rgba(255,102,0,0.3)'
-          : '1px solid rgba(255,255,255,0.1)'
-      }}>
-        <Flame size={20} style={{ color: 'var(--neon-orange)' }} />
-        <span style={{
-          fontFamily: 'var(--font-main)',
-          fontWeight: 700,
-          color: 'var(--neon-orange)',
-          fontSize: '1.1rem'
-        }}>
-          {stats.dayStreak || 0} Day Streak
-        </span>
-        {stats.longestStreak > stats.dayStreak && (
-          <span style={{
-            fontSize: '0.75rem',
-            color: 'rgba(255,255,255,0.5)',
-            marginLeft: '0.5rem'
-          }}>
-            (Best: {stats.longestStreak})
-          </span>
-        )}
-      </div>
-
-      <div className="grid-4" style={{ marginBottom: '1rem' }}>
-        <div className="stat-card">
-          <Zap size={24} style={{ color: 'var(--neon-cyan)', marginBottom: '0.5rem' }} />
-          <div className="stat-value">{stats.totalPoints?.toLocaleString()}</div>
-          <div className="stat-label">Current XP</div>
-        </div>
-
-        <div className="stat-card">
-          <TrendingUp size={24} style={{ color: 'var(--neon-green)', marginBottom: '0.5rem' }} />
-          <div className="stat-value">{stats.lifetimePoints?.toLocaleString()}</div>
-          <div className="stat-label">Lifetime XP</div>
-        </div>
-
-        <div className="stat-card">
-          <Trophy size={24} style={{ color: 'var(--neon-yellow)', marginBottom: '0.5rem' }} />
-          <div className="stat-value">{stats.unlockedAchievements}/{stats.totalAchievements}</div>
-          <div className="stat-label">Rewards</div>
-        </div>
-
-        <div className="stat-card">
-          <Target size={24} style={{ color: 'var(--neon-magenta)', marginBottom: '0.5rem' }} />
-          <div className="stat-value">{stats.level}</div>
-          <div className="stat-label">{stats.title}</div>
-        </div>
-      </div>
-
-      {/* Level Progress */}
-      <div>
-        <div className="flex justify-between mb-sm">
-          <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)' }}>
-            Level {stats.level} Progress
-          </span>
-          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--neon-cyan)' }}>
-            {levelProgress.current?.toLocaleString()} / {levelProgress.next?.toLocaleString()} XP
-          </span>
-        </div>
-        <div className="progress-bar progress-bar-lg">
-          <div
-            className="progress-fill"
-            style={{ width: `${levelProgress.percentage}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Next Achievement */}
-      {stats.nextAchievement && (
-        <div style={{
-          marginTop: '1.5rem',
-          padding: '1rem',
-          background: 'rgba(0,245,255,0.05)',
-          borderRadius: '8px',
-          border: '1px solid rgba(0,245,255,0.1)'
-        }}>
-          <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: '0.5rem' }}>
-            Next Reward
+    <div className="dashboard-grid">
+      {/* Main Stats Cards */}
+      <div className="stats-grid">
+        <div className="stat-card primary">
+          <div className="stat-icon">
+            <Zap size={28} />
           </div>
-          <div className="flex justify-between items-center">
-            <div>
-              <div style={{ fontWeight: 600 }}>{stats.nextAchievement.title}</div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--neon-cyan)' }}>
-                {stats.nextAchievement.pointsNeeded?.toLocaleString()} points needed
+          <div className="stat-content">
+            <div className="stat-value">{stats.totalPoints?.toLocaleString()}</div>
+            <div className="stat-label">Current XP</div>
+            <div className="stat-change">+{stats.todayPoints || 0} today</div>
+          </div>
+        </div>
+
+        <div className="stat-card success">
+          <div className="stat-icon">
+            <TrendingUp size={28} />
+          </div>
+          <div className="stat-content">
+            <div className="stat-value">{stats.lifetimePoints?.toLocaleString()}</div>
+            <div className="stat-label">Lifetime XP</div>
+            <div className="stat-change">All time total</div>
+          </div>
+        </div>
+
+        <div className="stat-card warning">
+          <div className="stat-icon">
+            <Trophy size={28} />
+          </div>
+          <div className="stat-content">
+            <div className="stat-value">{stats.unlockedAchievements}/{stats.totalAchievements}</div>
+            <div className="stat-label">Rewards</div>
+            <div className="stat-change">{((stats.unlockedAchievements/stats.totalAchievements)*100).toFixed(0)}% unlocked</div>
+          </div>
+        </div>
+
+        <div className="stat-card info">
+          <div className="stat-icon">
+            <Target size={28} />
+          </div>
+          <div className="stat-content">
+            <div className="stat-value">{stats.level}</div>
+            <div className="stat-label">{stats.title}</div>
+            <div className="stat-change">Hunter Rank</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Streak & Progress Section */}
+      <div className="progress-section">
+        {/* Streak Card */}
+        <div className="streak-card">
+          <div className="streak-header">
+            <Flame size={24} />
+            <span>Daily Streak</span>
+            {streakBonus > 0 && <div className="streak-bonus">+{streakBonus} bonus</div>}
+          </div>
+          <div className="streak-display">
+            <div className="streak-number">{stats.dayStreak || 0}</div>
+            <div className="streak-text">days</div>
+          </div>
+          <div className="streak-progress">
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: `${((stats.dayStreak % 7) / 7) * 100}%` }} />
+            </div>
+            <div className="streak-info">
+              <span>{7 - (stats.dayStreak % 7)} days to next bonus</span>
+              <span>Best: {stats.longestStreak}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Level Progress */}
+        <div className="level-progress-card">
+          <div className="level-header">
+            <Star size={20} />
+            <span>Level {stats.level} Progress</span>
+          </div>
+          <div className="level-bar">
+            <div className="progress-bar progress-bar-lg">
+              <div className="progress-fill" style={{ width: `${levelProgress.percentage}%` }} />
+            </div>
+            <div className="level-info">
+              <span>{levelProgress.current?.toLocaleString()} / {(levelProgress.next - levelProgress.current)?.toLocaleString()} XP</span>
+              <span>{(100 - levelProgress.percentage).toFixed(1)}% to next level</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="quick-stats-grid">
+        <div className="quick-stat-card">
+          <Calendar size={20} />
+          <div className="quick-stat-content">
+            <span className="quick-stat-label">Member Since</span>
+            <span className="quick-stat-value">{new Date(user?.createdAt).toLocaleDateString()}</span>
+          </div>
+        </div>
+        <div className="quick-stat-card">
+          <Clock size={20} />
+          <div className="quick-stat-content">
+            <span className="quick-stat-label">Last Active</span>
+            <span className="quick-stat-value">{new Date(user?.lastLogin).toLocaleDateString()}</span>
+          </div>
+        </div>
+        <div className="quick-stat-card">
+          <Award size={20} />
+          <div className="quick-stat-content">
+            <span className="quick-stat-label">Quests Completed</span>
+            <span className="quick-stat-value">{stats.completedQuests || 0}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Next Achievement Preview */}
+      <div className="next-reward-simple">
+        <div className="reward-header">
+          <Trophy size={20} />
+          <span>Next Reward</span>
+        </div>
+        {stats.nextAchievement ? (
+          <div className="reward-body">
+            <div className="reward-icon">{stats.nextAchievement.icon}</div>
+            <div className="reward-details">
+              <h4>{stats.nextAchievement.title}</h4>
+              <div className="reward-progress">
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${stats.nextAchievement.progress || 0}%` }} />
+                </div>
+                <div className="progress-info">
+                  <span>{stats.lifetimePoints?.toLocaleString()} / {stats.nextAchievement.requiredPoints?.toLocaleString()} XP</span>
+                  <span>{stats.nextAchievement.pointsNeeded?.toLocaleString()} needed</span>
+                </div>
               </div>
             </div>
-            <div style={{
-              fontSize: '1.5rem',
-              fontWeight: 800,
-              color: 'var(--neon-magenta)',
-              fontFamily: 'var(--font-main)'
-            }}>
-              {stats.nextAchievement.requiredPoints?.toLocaleString()}
+          </div>
+        ) : (
+          <div className="reward-placeholder">
+            <div className="placeholder-icon">🎯</div>
+            <div className="placeholder-text">
+              <h4>All Rewards Unlocked!</h4>
+              <p>You've achieved everything. Create new rewards to continue your journey!</p>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
@@ -142,8 +179,9 @@ function getLevelProgress(points) {
   const percentage = Math.min(100, (progress / total) * 100);
 
   return {
-    current: points,
-    next: currentLevel.max,
+    current: progress,
+    next: total,
+    total: points,
     percentage
   };
 }

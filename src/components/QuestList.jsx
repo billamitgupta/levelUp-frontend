@@ -1,4 +1,4 @@
-import { Plus, Check, Trash2 } from 'lucide-react';
+import { Plus, Check, Trash2, Clock, Repeat, Calendar } from 'lucide-react';
 
 const QuestList = ({ quests, onComplete, onDelete, onAdd }) => {
   const getDifficultyClass = (difficulty) => {
@@ -15,10 +15,30 @@ const QuestList = ({ quests, onComplete, onDelete, onAdd }) => {
     return badges[difficulty] || 'badge-cyan';
   };
 
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      case 'daily': return <Calendar size={14} />;
+      case 'weekly': return <Clock size={14} />;
+      case 'repeatable': return <Repeat size={14} />;
+      default: return null;
+    }
+  };
+
+  const groupedQuests = quests.reduce((acc, quest) => {
+    const category = quest.category || 'one-time';
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(quest);
+    return acc;
+  }, {});
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-lg">
-        <h2>⚔️ Active Quests</h2>
+      <div className="section-header">
+        <div className="section-title">
+          <span className="section-icon">⚔️</span>
+          <h2>Active Quests</h2>
+          <span className="quest-count">{quests.length}</span>
+        </div>
         <button className="btn btn-primary" onClick={onAdd}>
           <Plus size={18} />
           Add Quest
@@ -26,57 +46,81 @@ const QuestList = ({ quests, onComplete, onDelete, onAdd }) => {
       </div>
 
       {quests.length === 0 ? (
-        <div className="card empty-state">
+        <div className="empty-state-card">
           <div className="empty-state-icon">⚔️</div>
           <div className="empty-state-text">
-            No active quests. Create your first quest to start earning points!
+            <h3>No Active Quests</h3>
+            <p>Create your first quest to start earning points and level up!</p>
           </div>
-          <button className="btn btn-outline" onClick={onAdd}>
+          <button className="btn btn-primary" onClick={onAdd}>
             <Plus size={18} />
-            Create Quest
+            Create Your First Quest
           </button>
         </div>
       ) : (
-        <div className="flex flex-col gap-md">
-          {quests.map(quest => (
-            <div
-              key={quest._id}
-              className={`quest-item ${getDifficultyClass(quest.difficulty)}`}
-            >
-              <div className="quest-icon">{quest.icon}</div>
-
-              <div className="quest-content">
-                <div className="flex items-center gap-sm">
-                  <span className="quest-title">{quest.title}</span>
-                  <span className={`badge ${getDifficultyBadge(quest.difficulty)}`}>
-                    {quest.difficulty}
-                  </span>
-                  {quest.category !== 'one-time' && (
-                    <span className="badge badge-cyan">{quest.category}</span>
-                  )}
-                </div>
-                {quest.description && (
-                  <div className="quest-description">{quest.description}</div>
-                )}
+        <div className="quest-categories">
+          {Object.entries(groupedQuests).map(([category, categoryQuests]) => (
+            <div key={category} className="quest-category">
+              <div className="category-header">
+                {getCategoryIcon(category)}
+                <span className="category-name">{category.replace('-', ' ')}</span>
+                <span className="category-count">{categoryQuests.length}</span>
               </div>
-
-              <div className="quest-points">+{quest.points}</div>
-
-              <div className="flex gap-sm">
-                <button
-                  className="btn btn-success btn-icon"
-                  onClick={() => onComplete(quest._id)}
-                  title="Complete Quest"
-                >
-                  <Check size={18} />
-                </button>
-                <button
-                  className="btn btn-ghost btn-icon"
-                  onClick={() => onDelete(quest._id)}
-                  title="Delete Quest"
-                >
-                  <Trash2 size={18} />
-                </button>
+              
+              <div className="quest-grid">
+                {categoryQuests.map(quest => (
+                  <div
+                    key={quest._id}
+                    className={`quest-card ${getDifficultyClass(quest.difficulty)}`}
+                  >
+                    <div className="quest-header">
+                      <div className="quest-icon">{quest.icon}</div>
+                      <div className="quest-badges">
+                        <span className={`badge ${getDifficultyBadge(quest.difficulty)}`}>
+                          {quest.difficulty}
+                        </span>
+                        {quest.category !== 'one-time' && (
+                          <span className="badge badge-outline">
+                            {getCategoryIcon(quest.category)}
+                            {quest.category}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="quest-content">
+                      <h3 className="quest-title">{quest.title}</h3>
+                      {quest.description && (
+                        <p className="quest-description">{quest.description}</p>
+                      )}
+                    </div>
+                    
+                    <div className="quest-footer">
+                      <div className="quest-reward">
+                        <span className="reward-label">Reward</span>
+                        <span className="reward-points">+{quest.points} XP</span>
+                      </div>
+                      
+                      <div className="quest-actions">
+                        <button
+                          className="btn btn-success btn-sm"
+                          onClick={() => onComplete(quest._id)}
+                          title="Complete Quest"
+                        >
+                          <Check size={16} />
+                          Complete
+                        </button>
+                        <button
+                          className="btn btn-ghost btn-icon btn-sm"
+                          onClick={() => onDelete(quest._id)}
+                          title="Delete Quest"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}

@@ -11,6 +11,7 @@ import HistoryPanel from '../components/HistoryPanel';
 import AddQuestModal from '../components/AddQuestModal';
 import AddPenaltyModal from '../components/AddPenaltyModal';
 import AddAchievementModal from '../components/AddAchievementModal';
+import EditAchievementModal from '../components/EditAchievementModal';
 import LevelUpAnimation from '../components/LevelUpAnimation';
 import { Swords, Skull, Trophy, Clock } from 'lucide-react';
 
@@ -27,6 +28,8 @@ const Home = () => {
   const [showAddQuest, setShowAddQuest] = useState(false);
   const [showAddPenalty, setShowAddPenalty] = useState(false);
   const [showAddAchievement, setShowAddAchievement] = useState(false);
+  const [showEditAchievement, setShowEditAchievement] = useState(false);
+  const [editingAchievement, setEditingAchievement] = useState(null);
 
   // Level up animation
   const [levelUp, setLevelUp] = useState(null);
@@ -91,7 +94,8 @@ const Home = () => {
     try {
       await api.delete(`/quests/${questId}`);
       toast.success('Quest removed');
-      setQuests(quests.filter(q => q._id !== questId));
+      await fetchAllData();
+      await refreshStats();
     } catch (error) {
       toast.error('Failed to delete quest');
     }
@@ -150,6 +154,33 @@ const Home = () => {
     }
   };
 
+  const handleEditAchievement = (achievement) => {
+    setEditingAchievement(achievement);
+    setShowEditAchievement(true);
+  };
+
+  const handleUpdateAchievement = async (achievementId, achievementData) => {
+    try {
+      const { data } = await api.put(`/achievements/${achievementId}`, achievementData);
+      setAchievements(achievements.map(a => a._id === achievementId ? data : a).sort((a, b) => a.requiredPoints - b.requiredPoints));
+      setShowEditAchievement(false);
+      setEditingAchievement(null);
+      toast.success('Achievement updated!');
+    } catch (error) {
+      toast.error('Failed to update achievement');
+    }
+  };
+
+  const handleDeleteAchievement = async (achievementId) => {
+    try {
+      await api.delete(`/achievements/${achievementId}`);
+      setAchievements(achievements.filter(a => a._id !== achievementId));
+      toast.success('Achievement deleted!');
+    } catch (error) {
+      toast.error('Failed to delete achievement');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center" style={{ minHeight: '100vh' }}>
@@ -176,19 +207,42 @@ const Home = () => {
 
       <main className="page">
         <div className="container">
+          {/* Welcome Banner */}
+          <div className="welcome-banner">
+            <div className="welcome-content">
+              <div className="welcome-text">
+                <h1>Welcome back, {user?.username}! 🚀</h1>
+                <p>Ready to level up? You're currently a <strong>{user?.title}</strong> at Level {user?.level}</p>
+              </div>
+              <div className="welcome-stats">
+                <div className="welcome-stat">
+                  <span className="stat-number">{user?.totalPoints?.toLocaleString()}</span>
+                  <span className="stat-text">Total XP</span>
+                </div>
+                <div className="welcome-stat">
+                  <span className="stat-number">{user?.dayStreak || 0}</span>
+                  <span className="stat-text">Day Streak</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <StatsPanel stats={stats} user={user} />
 
           <div className="nav mt-lg mb-lg">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                className={`nav-item ${activeTab === tab.id ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                <tab.icon size={16} style={{ marginRight: '0.5rem' }} />
-                {tab.label}
-              </button>
-            ))}
+            {tabs.map(tab => {
+              const IconComponent = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  className={`nav-item ${activeTab === tab.id ? 'active' : ''}`}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  <IconComponent size={16} style={{ marginRight: '0.5rem' }} />
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
           {activeTab === 'quests' && (
@@ -214,6 +268,8 @@ const Home = () => {
               achievements={achievements}
               onClaim={handleClaimAchievement}
               onAdd={() => setShowAddAchievement(true)}
+              onEdit={handleEditAchievement}
+              onDelete={handleDeleteAchievement}
             />
           )}
 
@@ -242,6 +298,17 @@ const Home = () => {
         <AddAchievementModal
           onClose={() => setShowAddAchievement(false)}
           onSubmit={handleAddAchievement}
+        />
+      )}
+
+      {showEditAchievement && editingAchievement && (
+        <EditAchievementModal
+          achievement={editingAchievement}
+          onClose={() => {
+            setShowEditAchievement(false);
+            setEditingAchievement(null);
+          }}
+          onSubmit={handleUpdateAchievement}
         />
       )}
 
